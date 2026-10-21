@@ -1,0 +1,18 @@
+{
+  "name": "House Surgeon Schedule Planner",
+  "short_name": "HS Planner",
+  "description": "Mobile-first clinical rotation schedule planner for medical house surgeons",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

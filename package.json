@@ -1,0 +1,34 @@
+{
+  "name": "house-surgeon-schedule-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mobile-first scheduling application for house surgeons in Indian medical colleges",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:shared": "npm run build --workspace=@hs/shared",
+    "build:api": "npm run build --workspace=@hs/api",
+    "build:admin": "npm run build --workspace=@hs/admin-web",
+    "build:hs": "npm run build --workspace=@hs/hs-pwa",
+    "dev:api": "npm run dev --workspace=@hs/api",
+    "dev:admin": "npm run dev --workspace=@hs/admin-web",
+    "dev:hs": "npm run dev --workspace=@hs/hs-pwa",
+    "bootstrap:admin": "npm run bootstrap:admin --workspace=@hs/api",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "keywords": [
+    "house-surgeon",
+    "medical-internship",
+    "schedule-planner",
+    "pwa",
+    "mongodb"
+  ],
+  "author": "Antigravity Engineering",
+  "license": "MIT",
+  "dependencies": {
+    "react-hot-toast": "^2.6.1"
+  }
+}
