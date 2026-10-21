@@ -63,7 +63,7 @@ JWT_REFRESH_SECRET=your-32-char-minimum-refresh-secret-key-string
 
 # Administrator Bootstrap
 ADMIN_BOOTSTRAP_USERNAME=admin
-ADMIN_BOOTSTRAP_PASSWORD=AdminSecurePass2026!
+ADMIN_BOOTSTRAP_PASSWORD=adminpass
 ADMIN_BOOTSTRAP_EMAIL=admin@institution.edu
 
 # Web Push VAPID credentials
