@@ -18,9 +18,9 @@ const UserSchema = new Schema<IUserDocument>(
     role: { type: String, enum: ['admin', 'hs'], required: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     displayName: { type: String, required: true, trim: true },
-    username: { type: String, sparse: true, trim: true },
+    username: { type: String, trim: true },
     passwordHash: { type: String },
-    googleSubjectId: { type: String, sparse: true },
+    googleSubjectId: { type: String },
     status: { type: String, enum: ['active', 'suspended', 'blocked'], default: 'active' }
   },
   { timestamps: true }
