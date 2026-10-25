@@ -225,7 +225,7 @@ export const CalendarPage: React.FC = () => {
                       <div>
                         <h4 className="font-bold text-sm text-white">{p.departmentName}</h4>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          {p.startDate} to {p.endDate}
+                          {formatDisplayDate(p.startDate)} to {formatDisplayDate(p.endDate)}
                         </p>
                       </div>
                     </div>

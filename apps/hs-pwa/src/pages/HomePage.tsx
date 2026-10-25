@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSchedule } from '../context/ScheduleContext';
 import { OfflineBanner } from '../components/OfflineBanner';
-import { formatRangeDisplay, getTodayInKolkata, compareDates } from '@hs/shared';
+import { formatDisplayDate, formatRangeDisplay, getTodayInKolkata, compareDates } from '@hs/shared';
 import { Stethoscope, Calendar, Clock, Layers, ArrowUpRight, Sparkles, Building2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -34,7 +34,7 @@ export const HomePage: React.FC = () => {
 
           <div className="flex items-center space-x-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
             <Calendar className="w-3.5 h-3.5 text-blue-400" />
-            <span>Today • {today}</span>
+            <span>Today • {formatDisplayDate(today)}</span>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export const HomePage: React.FC = () => {
                       {personalSchedule.nextUpcomingPosting.departmentName}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Starts {personalSchedule.nextUpcomingPosting.startDate}
+                      Starts {formatDisplayDate(personalSchedule.nextUpcomingPosting.startDate)}
                     </p>
                   </div>
                   <div className="text-right">

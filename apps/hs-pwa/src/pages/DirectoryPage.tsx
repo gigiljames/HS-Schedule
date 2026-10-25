@@ -304,13 +304,17 @@ export const DirectoryPage: React.FC = () => {
   };
 
   const handleMakeDefault = async (rosterRecordId: string) => {
+    if (isOffline) {
+      toast.error('Changing default schedule requires an active internet connection.');
+      return;
+    }
     setSettingDefault(true);
     try {
       await setDefaultSchedule(rosterRecordId);
       await refreshMembership();
       toast.success('Successfully updated your default schedule profile!');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update default profile');
+      toast.error(err.response?.data?.message || err.message || 'Failed to update default profile');
     } finally {
       setSettingDefault(false);
     }
@@ -586,8 +590,7 @@ export const DirectoryPage: React.FC = () => {
                                       <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                       <span className="text-slate-500 font-medium">Dates: </span>
                                       <span className="text-slate-200 font-mono text-[11px]">
-                                        {formatDisplayDate(surgeon.startDate).split(',')[0]} -{' '}
-                                        {formatDisplayDate(surgeon.endDate).split(',')[0]}
+                                        {formatDisplayDate(surgeon.startDate)} to {formatDisplayDate(surgeon.endDate)}
                                       </span>
                                     </div>
                                   )}

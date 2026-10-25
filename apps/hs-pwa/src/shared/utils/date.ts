@@ -40,22 +40,15 @@ export function getDayBefore(dateStr: string): string {
 
 export function formatDisplayDate(dateStr: string): string {
   if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${String(d).padStart(2, '0')} ${months[m - 1]} ${y}`;
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [y, m, d] = parts;
+    return `${d.padStart(2, '0')}-${m.padStart(2, '0')}-${y}`;
+  }
+  return dateStr;
 }
 
 export function formatRangeDisplay(startDate: string, endDate: string): string {
   if (!startDate || !endDate) return '';
-  const [y1, m1, d1] = startDate.split('-').map(Number);
-  const [y2, m2, d2] = endDate.split('-').map(Number);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  if (y1 === y2) {
-    if (m1 === m2) {
-      return `${String(d1).padStart(2, '0')}–${String(d2).padStart(2, '0')} ${months[m1 - 1]} ${y1}`;
-    }
-    return `${String(d1).padStart(2, '0')} ${months[m1 - 1]} – ${String(d2).padStart(2, '0')} ${months[m2 - 1]} ${y1}`;
-  }
-  return `${String(d1).padStart(2, '0')} ${months[m1 - 1]} ${y1} – ${String(d2).padStart(2, '0')} ${months[m2 - 1]} ${y2}`;
+  return `${formatDisplayDate(startDate)} to ${formatDisplayDate(endDate)}`;
 }

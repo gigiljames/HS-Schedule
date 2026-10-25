@@ -18,9 +18,11 @@ import {
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
-  const { user, institution, membership, leaveInstitution, logout, refreshMembership } = useAuth();
+  const { user, institution, membership, leaveInstitution, logout, refreshMembership, connectivity } = useAuth();
   const { personalSchedule, lastSyncedAt } = useSchedule();
   const navigate = useNavigate();
+
+  const isOffline = connectivity === 'offline' || !navigator.onLine;
 
   // Name editing
   const [isEditingName, setIsEditingName] = useState(false);
@@ -51,6 +53,10 @@ export const ProfilePage: React.FC = () => {
   }, []);
 
   const handleSaveName = async () => {
+    if (isOffline) {
+      toast.error('Cannot update profile name while offline. Please connect to the internet.');
+      return;
+    }
     if (!displayName.trim()) return;
     setIsSavingName(true);
     try {
@@ -65,6 +71,10 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleRequestPushPermission = async () => {
+    if (isOffline) {
+      toast.error('Registering for Web Push reminders requires an active internet connection.');
+      return;
+    }
     if (!pushSupported) {
       toast.error('Web Push is not supported by your current browser.');
       return;
@@ -104,6 +114,10 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleSavePreferences = async () => {
+    if (isOffline) {
+      toast.error('Cannot save notification preferences while offline. Please connect to the internet.');
+      return;
+    }
     if (!institution) return;
     setSavingPrefs(true);
     try {
@@ -124,9 +138,25 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleConfirmLeave = async () => {
-    await leaveInstitution();
-    toast.success('Left college institution');
-    navigate('/join');
+    if (isOffline) {
+      toast.error('Leaving an institution requires an active internet connection.');
+      return;
+    }
+    try {
+      await leaveInstitution();
+      toast.success('Left college institution');
+      navigate('/join');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to leave institution');
+    }
+  };
+
+  const handleChangeProfile = () => {
+    if (isOffline) {
+      toast.error('Changing roster profile is not allowed in offline mode. Please connect to the internet.');
+      return;
+    }
+    navigate('/select-profile');
   };
 
   function urlB64ToUint8Array(base64String: string) {
@@ -226,12 +256,12 @@ export const ProfilePage: React.FC = () => {
                       Controls personal agenda & reminders
                     </span>
                   </div>
-                  <Link
-                    to="/select-profile"
+                  <button
+                    onClick={handleChangeProfile}
                     className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
                   >
                     Change
-                  </Link>
+                  </button>
                 </div>
               </div>
             </section>
@@ -381,7 +411,23 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <p>
                   Schedules are locally cached on this device for offline reference in hospital zones with weak cell reception.
-                  {lastSyncedAt && ` Last synced: ${new Date(lastSyncedAt).toLocaleString('en-IN')}`}
+                  {lastSyncedAt && (() => {
+                    try {
+                      const dt = new Date(lastSyncedAt);
+                      const d = String(dt.getDate()).padStart(2, '0');
+                      const m = String(dt.getMonth() + 1).padStart(2, '0');
+                      const y = dt.getFullYear();
+                      const timeStr = new Intl.DateTimeFormat('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }).format(dt);
+                      return ` Last synced: ${d}-${m}-${y}, ${timeStr}`;
+                    } catch {
+                      return ` Last synced: ${lastSyncedAt}`;
+                    }
+                  })()}
                 </p>
               </div>
             </section>

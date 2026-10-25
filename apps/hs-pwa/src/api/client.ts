@@ -101,10 +101,13 @@ apiClient.interceptors.response.use(
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
-      } catch (refreshErr) {
+      } catch (refreshErr: any) {
         processQueue(refreshErr, null);
-        setAccessToken(null);
-        window.dispatchEvent(new Event('auth:hs-session-expired'));
+        // Only dispatch session-expired if the server explicitly rejected authentication (HTTP 401/403), NOT on network failure!
+        if (refreshErr?.response && (refreshErr.response.status === 401 || refreshErr.response.status === 403)) {
+          setAccessToken(null);
+          window.dispatchEvent(new Event('auth:hs-session-expired'));
+        }
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;
