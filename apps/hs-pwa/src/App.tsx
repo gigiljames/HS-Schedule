@@ -12,9 +12,10 @@ import { DirectoryPage } from './pages/DirectoryPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { BottomNav } from './components/BottomNav';
 import { DesktopHeader } from './components/DesktopHeader';
+import { OfflineUnavailable } from './components/OfflineUnavailable';
 
 const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading, institution, membership } = useAuth();
+  const { isAuthenticated, isLoading, institution, membership, connectivity, localDataStatus, sessionStatus } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,6 +24,11 @@ const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         Checking session...
       </div>
     );
+  }
+
+  // If offline and no local data has ever been downloaded for this device
+  if (connectivity === 'offline' && localDataStatus === 'not_downloaded' && sessionStatus !== 'authenticated') {
+    return <OfflineUnavailable />;
   }
 
   if (isAuthenticated) {
@@ -39,7 +45,7 @@ const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, connectivity, localDataStatus, sessionStatus } = useAuth();
 
   if (isLoading) {
     return (
@@ -50,6 +56,11 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   }
 
+  // If offline and no local data has ever been downloaded for this device
+  if (connectivity === 'offline' && localDataStatus === 'not_downloaded' && sessionStatus !== 'authenticated') {
+    return <OfflineUnavailable />;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -58,14 +69,20 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const ProtectedShell: React.FC = () => {
-  const { isAuthenticated, isLoading, institution, membership } = useAuth();
+  const { isAuthenticated, isLoading, institution, membership, connectivity, localDataStatus, sessionStatus } = useAuth();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400 text-sm">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3" />
         Authenticating House Surgeon account...
       </div>
     );
+  }
+
+  // If offline and no local schedule data has ever been downloaded for this device
+  if (connectivity === 'offline' && localDataStatus === 'not_downloaded' && sessionStatus !== 'authenticated') {
+    return <OfflineUnavailable />;
   }
 
   if (!isAuthenticated) {

@@ -4,11 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { toast } from 'react-hot-toast';
-import { Search, UserCheck, Layers, Check, Info, X, Building2 } from 'lucide-react';
+import { Search, UserCheck, Layers, Check, Info, X, Building2, ArrowLeft } from 'lucide-react';
 
 export const SelectProfilePage: React.FC = () => {
-  const { institution, setDefaultSchedule, refreshMembership } = useAuth();
+  const { institution, setDefaultSchedule, refreshMembership, membership } = useAuth();
   const navigate = useNavigate();
+
+  // If the user already has a default schedule profile and is offline, changing roster is not allowed
+  useEffect(() => {
+    if (!navigator.onLine && membership?.defaultScheduleRecordId) {
+      toast.error('Changing roster profile is not allowed in offline mode. Please connect to the internet.');
+      navigate('/', { replace: true });
+    }
+  }, [membership?.defaultScheduleRecordId, navigate]);
 
   const PAGE_SIZE = 24;
   const [rosterList, setRosterList] = useState<any[]>([]);
@@ -33,6 +41,10 @@ export const SelectProfilePage: React.FC = () => {
       return;
     }
 
+    if (!navigator.onLine) {
+      return;
+    }
+
     const loadBatches = async () => {
       try {
         const { data } = await apiClient.get('/batches/all', { params: { institutionId: institution.id } });
@@ -49,6 +61,12 @@ export const SelectProfilePage: React.FC = () => {
   useEffect(() => {
     if (!institution) return;
     let isCancelled = false;
+
+    if (!navigator.onLine) {
+      setLoading(false);
+      setHasMore(false);
+      return;
+    }
 
     const fetchInitialRoster = async () => {
       setLoading(true);
@@ -71,6 +89,7 @@ export const SelectProfilePage: React.FC = () => {
         }
       } catch (err: any) {
         if (!isCancelled) {
+          setHasMore(false);
           toast.error('Failed to load official college roster');
         }
       } finally {
@@ -89,7 +108,7 @@ export const SelectProfilePage: React.FC = () => {
 
   // Load next page on scroll
   const loadNextPage = async () => {
-    if (!institution || loadingMore || !hasMore || loading) return;
+    if (!institution || loadingMore || !hasMore || loading || !navigator.onLine) return;
     const nextPage = page + 1;
     setLoadingMore(true);
     try {
@@ -111,7 +130,7 @@ export const SelectProfilePage: React.FC = () => {
       setTotalCount(total);
       setPage(nextPage);
     } catch {
-      // ignore
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }
@@ -144,6 +163,10 @@ export const SelectProfilePage: React.FC = () => {
 
   const handleConfirmProfile = async () => {
     if (!selectedRecord) return;
+    if (!navigator.onLine) {
+      toast.error('Setting schedule profile requires an active internet connection.');
+      return;
+    }
     setSubmitting(true);
     try {
       await setDefaultSchedule(selectedRecord.id);
@@ -182,6 +205,15 @@ export const SelectProfilePage: React.FC = () => {
               Select your name from the verified college roster to link your clinical timetable, department tracks, and automated reminders.
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-semibold transition-all shadow-sm shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Profile</span>
+          </button>
         </div>
 
         {/* Debounced Search */}
