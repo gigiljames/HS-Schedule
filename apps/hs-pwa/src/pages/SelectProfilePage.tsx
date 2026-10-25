@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useDebounce } from '../hooks/useDebounce';
 import { toast } from 'react-hot-toast';
-import { Search, UserCheck, Layers, Check, Info, X, Building2 } from 'lucide-react';
+import { Search, UserCheck, Layers, Check, Info, X, Building2, ArrowLeft } from 'lucide-react';
 
 export const SelectProfilePage: React.FC = () => {
   const { institution, setDefaultSchedule, refreshMembership, membership } = useAuth();
@@ -205,6 +205,15 @@ export const SelectProfilePage: React.FC = () => {
               Select your name from the verified college roster to link your clinical timetable, department tracks, and automated reminders.
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-semibold transition-all shadow-sm shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Profile</span>
+          </button>
         </div>
 
         {/* Debounced Search */}

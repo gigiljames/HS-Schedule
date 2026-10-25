@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSchedule } from '../context/ScheduleContext';
 import { OfflineBanner } from '../components/OfflineBanner';
@@ -54,6 +54,7 @@ export const DirectoryPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 250);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const [rawEntries, setRawEntries] = useState<IDirectoryEntry[]>([]);
   const [apiDepartments, setApiDepartments] = useState<IDepartmentInfo[]>([]);
@@ -351,7 +352,7 @@ export const DirectoryPage: React.FC = () => {
                 Department Directory
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                Browse clinical departments in accordion format and check house surgeons assigned on any date.
+                Browse departments and check house surgeons assigned on any date.
               </p>
             </div>
           </div>
@@ -361,22 +362,40 @@ export const DirectoryPage: React.FC = () => {
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-4 sm:p-5 shadow-xl space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             {/* Input 1: Posting Date */}
-            <div className="sm:col-span-5 bg-slate-950 border border-slate-800 rounded-2xl px-3.5 py-2.5 flex items-center space-x-3 focus-within:border-blue-500/60 transition-colors">
-              <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
+            <div
+              onClick={() => dateInputRef.current?.showPicker?.()}
+              className="sm:col-span-5 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-2xl px-3.5 py-2.5 flex items-center space-x-3 focus-within:border-blue-500/60 transition-colors cursor-pointer group shadow-inner"
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dateInputRef.current?.showPicker?.();
+                }}
+                className="p-2 rounded-xl bg-blue-500/15 text-blue-400 group-hover:bg-blue-500/25 group-hover:text-blue-300 transition-all shrink-0 shadow-xs"
+                title="Open calendar"
+              >
+                <Calendar className="w-5 h-5" />
+              </button>
               <div className="flex-1 min-w-0">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block leading-tight">
                   Rotation Date
                 </span>
                 <input
+                  ref={dateInputRef}
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full text-xs sm:text-sm bg-transparent text-slate-100 font-semibold outline-none cursor-pointer"
+                  className="w-full text-xs sm:text-sm bg-transparent text-slate-100 font-semibold outline-none cursor-pointer [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-85 hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
                 />
               </div>
               {selectedDate !== todayStr && (
                 <button
-                  onClick={() => setSelectedDate(todayStr)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedDate(todayStr);
+                  }}
                   className="px-2 py-1 text-[11px] font-bold bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-lg shrink-0 flex items-center space-x-1 transition-colors"
                   title="Reset to today"
                 >
@@ -673,7 +692,6 @@ export const DirectoryPage: React.FC = () => {
                   disabled={settingDefault}
                   className="w-full flex items-center justify-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition-colors disabled:opacity-50"
                 >
-                  <Sparkles className="w-3.5 h-3.5 mr-2" />
                   <span>{settingDefault ? 'Updating...' : 'Make this my default schedule profile'}</span>
                 </button>
                 <p className="text-[10px] text-slate-500 text-center">
