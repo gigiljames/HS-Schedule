@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { userRepository } from '../repositories/userRepository.js';
 import { AuthSessionModel } from '../models/AuthSession.js';
 import { InstitutionMembershipModel } from '../models/InstitutionMembership.js';
+import { UserModel } from '../models/User.js';
 import { comparePassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { IAuthTokens, IUser } from '../shared/index.js';
@@ -28,6 +29,9 @@ export class AuthService {
     if (!isValid) {
       throw new Error('Invalid administrator credentials');
     }
+
+    user.lastActiveAt = new Date();
+    await user.save();
 
     return this.generateTokensForUser(user, clientMeta);
   }
@@ -61,6 +65,7 @@ export class AuthService {
       if (user) {
         // Link Google Subject ID
         user.googleSubjectId = googleSubjectId;
+        user.lastActiveAt = new Date();
         await user.save();
       } else {
         user = await userRepository.createUser({
@@ -68,9 +73,13 @@ export class AuthService {
           email,
           displayName,
           googleSubjectId,
-          status: 'active'
+          status: 'active',
+          lastActiveAt: new Date()
         });
       }
+    } else {
+      user.lastActiveAt = new Date();
+      await user.save();
     }
 
     if (user.status === 'blocked' || user.status === 'suspended') {
@@ -94,7 +103,13 @@ export class AuthService {
     return this.toUserDto(user);
   }
 
-  async listHsUsers(query: { search?: string; page?: number; pageSize?: number }) {
+  async listHsUsers(query: {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: 'name' | 'createdAt' | 'lastActiveAt';
+    sortOrder?: 'asc' | 'desc';
+  }) {
     const { items, total } = await userRepository.listHsUsers(query);
     const userIds = items.map((u) => u._id);
     const memberships = await InstitutionMembershipModel.find({ userId: { $in: userIds } })
@@ -119,7 +134,8 @@ export class AuthService {
         institutionId: m?.institutionId?._id?.toString() || null,
         defaultProfile: m?.defaultScheduleRecordId?.name || 'Not Selected',
         membershipStatus: m?.status || 'none',
-        createdAt: u.createdAt
+        createdAt: u.createdAt,
+        lastActiveAt: u.lastActiveAt ? (u.lastActiveAt instanceof Date ? u.lastActiveAt.toISOString() : u.lastActiveAt) : null
       };
     });
 
@@ -159,6 +175,9 @@ export class AuthService {
     if (!user || user.status !== 'active') {
       throw new Error('User account not found or suspended');
     }
+
+    user.lastActiveAt = new Date();
+    await user.save();
 
     return this.generateTokensForUser(user, clientMeta);
   }
@@ -203,6 +222,9 @@ export class AuthService {
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+
+    // Update lastActiveAt on login/token creation
+    await UserModel.findByIdAndUpdate(user._id, { $set: { lastActiveAt: new Date() } });
 
     const userDto: IUser = {
       id: user._id.toString(),

@@ -126,11 +126,11 @@ export const CalendarPage: React.FC = () => {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Rotation Calendar</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+        <div className='pl-1'>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight ">Rotation Calendar</h1>
+          {/* <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
             Browse through your entire rotational calendar and day-by-day clinical assignments.
-          </p>
+          </p> */}
         </div>
 
         {/* 2-Column Responsive Layout on Desktop */}

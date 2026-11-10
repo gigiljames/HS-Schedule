@@ -25,9 +25,15 @@ export class UserRepository {
     return UserModel.findByIdAndUpdate(id, { $set: update }, { new: true });
   }
 
-  async listHsUsers(query: { search?: string; page?: number; pageSize?: number }): Promise<{ items: IUserDocument[]; total: number }> {
+  async listHsUsers(query: {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: 'name' | 'createdAt' | 'lastActiveAt';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ items: IUserDocument[]; total: number }> {
     const page = Math.max(1, query.page || 1);
-    const pageSize = Math.min(100, Math.max(1, query.pageSize || 20));
+    const pageSize = Math.min(100, Math.max(1, query.pageSize || 10));
     const filter: Record<string, unknown> = { role: 'hs' };
 
     if (query.search) {
@@ -37,9 +43,24 @@ export class UserRepository {
       ];
     }
 
+    let sortField = 'displayName';
+    if (query.sortBy === 'createdAt') {
+      sortField = 'createdAt';
+    } else if (query.sortBy === 'lastActiveAt') {
+      sortField = 'lastActiveAt';
+    }
+
+    const sortDir: 1 | -1 = query.sortOrder === 'desc' ? -1 : 1;
+    const sortOptions: Record<string, 1 | -1> = { [sortField]: sortDir };
+
+    const queryChain = UserModel.find(filter);
+    if (sortField === 'displayName') {
+      queryChain.collation({ locale: 'en', strength: 2 });
+    }
+
     const [items, total] = await Promise.all([
-      UserModel.find(filter)
-        .sort({ createdAt: -1 })
+      queryChain
+        .sort(sortOptions)
         .skip((page - 1) * pageSize)
         .limit(pageSize),
       UserModel.countDocuments(filter)

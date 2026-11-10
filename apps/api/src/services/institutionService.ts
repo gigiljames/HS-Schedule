@@ -55,7 +55,13 @@ export class InstitutionService {
     return this.toDto(doc);
   }
 
-  async listInstitutions(query: { search?: string; page?: number; pageSize?: number }): Promise<{ items: IInstitution[]; total: number }> {
+  async listInstitutions(query: {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: 'name' | 'createdAt';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ items: IInstitution[]; total: number }> {
     const { items, total } = await institutionRepository.list(query);
     return {
       items: items.map(this.toDto),

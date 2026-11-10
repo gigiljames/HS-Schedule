@@ -21,8 +21,20 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1];
   try {
     const payload = verifyAccessToken(token);
-    const userDoc = await UserModel.findById(payload.userId).select('status');
-    if (userDoc && (userDoc.status === 'blocked' || userDoc.status === 'suspended')) {
+
+    // Atomically update lastActiveAt in MongoDB and select user status
+    const userDoc = await UserModel.findByIdAndUpdate(
+      payload.userId,
+      { $set: { lastActiveAt: new Date() } },
+      { new: true }
+    ).select('status');
+
+    if (!userDoc) {
+      res.status(401).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    if (userDoc.status === 'blocked' || userDoc.status === 'suspended') {
       res.status(403).json({ success: false, message: 'Your account has been blocked by the administrator.' });
       return;
     }

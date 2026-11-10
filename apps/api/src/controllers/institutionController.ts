@@ -21,9 +21,11 @@ export class InstitutionController {
     try {
       const search = req.query.search as string | undefined;
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 20;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
+      const sortBy = (req.query.sortBy as any) || 'name';
+      const sortOrder = (req.query.sortOrder as any) || 'asc';
 
-      const result = await institutionService.listInstitutions({ search, page, pageSize });
+      const result = await institutionService.listInstitutions({ search, page, pageSize, sortBy, sortOrder });
       res.json({
         success: true,
         data: result
@@ -96,16 +98,25 @@ export class InstitutionController {
   async listMembers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 50;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
       const search = req.query.search as string | undefined;
-      const result = await institutionRepository.listMembershipsByInstitution(req.params.id as string, { page, pageSize, search });
+      const sortBy = (req.query.sortBy as any) || 'name';
+      const sortOrder = (req.query.sortOrder as any) || 'asc';
+      const result = await institutionRepository.listMembershipsByInstitution(req.params.id as string, {
+        page,
+        pageSize,
+        search,
+        sortBy,
+        sortOrder
+      });
       const items = result.items.map((m: any) => ({
         id: m._id.toString(),
         userId: m.userId ? {
           id: (m.userId._id || m.userId).toString(),
           displayName: m.userId.displayName || 'Unknown',
           email: m.userId.email || 'N/A',
-          status: m.userId.status || 'active'
+          status: m.userId.status || 'active',
+          lastActiveAt: m.userId.lastActiveAt ? (m.userId.lastActiveAt instanceof Date ? m.userId.lastActiveAt.toISOString() : m.userId.lastActiveAt) : null
         } : null,
         institutionId: m.institutionId.toString(),
         status: m.status,

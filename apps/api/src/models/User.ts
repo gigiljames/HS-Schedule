@@ -9,6 +9,7 @@ export interface IUserDocument extends Document {
   passwordHash?: string;
   googleSubjectId?: string;
   status: UserStatus;
+  lastActiveAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +22,8 @@ const UserSchema = new Schema<IUserDocument>(
     username: { type: String, trim: true },
     passwordHash: { type: String },
     googleSubjectId: { type: String },
-    status: { type: String, enum: ['active', 'suspended', 'blocked'], default: 'active' }
+    status: { type: String, enum: ['active', 'suspended', 'blocked'], default: 'active' },
+    lastActiveAt: { type: Date }
   },
   { timestamps: true }
 );
@@ -29,5 +31,6 @@ const UserSchema = new Schema<IUserDocument>(
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ username: 1 }, { unique: true, sparse: true });
 UserSchema.index({ googleSubjectId: 1 }, { unique: true, sparse: true });
+UserSchema.index({ lastActiveAt: -1 });
 
 export const UserModel = mongoose.model<IUserDocument>('User', UserSchema);

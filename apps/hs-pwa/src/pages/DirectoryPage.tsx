@@ -343,10 +343,10 @@ export const DirectoryPage: React.FC = () => {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
         <div>
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
+          <div className="flex items-center space-x-2.5 pl-1">
+            {/* <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
               <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            </div> */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 Department Directory
@@ -359,7 +359,7 @@ export const DirectoryPage: React.FC = () => {
         </div>
 
         {/* Two Filter Inputs: Date & Search */}
-        <div className="bg-slate-900 rounded-3xl border border-slate-800 p-4 sm:p-5 shadow-xl space-y-4">
+        <div className="bg-slate-900 rounded-3xl border border-slate-800 p-4 sm:p-5 shadow-xl space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
             {/* Input 1: Posting Date */}
             <div
@@ -386,7 +386,7 @@ export const DirectoryPage: React.FC = () => {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full text-xs sm:text-sm bg-transparent text-slate-100 font-semibold outline-none cursor-pointer [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-85 hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
+                  className="w-full text-sm sm:text-sm bg-transparent text-slate-100 font-semibold outline-none cursor-pointer [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-85 hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
                 />
               </div>
               {selectedDate !== todayStr && (
@@ -407,7 +407,17 @@ export const DirectoryPage: React.FC = () => {
 
             {/* Input 2: Search (Department Name & House Surgeon Name) */}
             <div className="sm:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl px-3.5 py-2.5 flex items-center space-x-3 focus-within:border-blue-500/60 transition-colors">
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dateInputRef.current?.showPicker?.();
+                }}
+                className="p-2"
+                title="Open calendar"
+              >
+                <Search className="w-5 h-5 text-slate-500" />
+              </button>
               <div className="flex-1 min-w-0">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block leading-tight">
                   Search
@@ -416,8 +426,8 @@ export const DirectoryPage: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by department name (MED, Surg) or house surgeon..."
-                  className="w-full text-xs sm:text-sm bg-transparent outline-none text-white placeholder-slate-500 font-medium"
+                  placeholder="Search by department name or house surgeon..."
+                  className="w-full text-sm sm:text-sm bg-transparent outline-none text-white placeholder-slate-700 font-medium"
                 />
               </div>
               {searchQuery && (
@@ -433,12 +443,12 @@ export const DirectoryPage: React.FC = () => {
           </div>
 
           {/* Quick Metrics & Accordion Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-xs">
-            <div className="flex items-center space-x-2 text-slate-400">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 px-1 border-t border-slate-800/80 text-xs">
+            <div className="flex flex-col items-start justify-center space-x-2 text-slate-400">
               <span className="font-semibold text-slate-300">
                 {departmentGroups.length} {departmentGroups.length === 1 ? 'Department' : 'Departments'}
               </span>
-              <span>•</span>
+              {/* <span>•</span> */}
               <span className="text-slate-400">
                 <strong className="text-white font-bold">{totalAssignedSurgeons}</strong> House Surgeons on{' '}
                 <strong className="text-blue-400 font-medium">{formatDisplayDate(selectedDate)}</strong>
@@ -448,10 +458,10 @@ export const DirectoryPage: React.FC = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={isAllExpanded ? handleCollapseAll : handleExpandAll}
-                className="px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 text-xs font-bold rounded-xl border border-slate-700/70 transition-colors flex items-center space-x-1.5 shadow-xs"
+                className="px-3 py-2 bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 text-xs font-bold rounded-xl border border-slate-700/70 transition-colors flex items-center space-x-1.5 shadow-xs"
               >
-                <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400" />
                 <span>{isAllExpanded ? 'Collapse All' : 'Expand All'}</span>
+                <ChevronsUpDown className="w-4 h-4 text-slate-400" />
               </button>
             </div>
           </div>
@@ -474,7 +484,7 @@ export const DirectoryPage: React.FC = () => {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="mt-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition-colors inline-block"
+                  className="mt-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-colors inline-block"
                 >
                   Clear Search
                 </button>

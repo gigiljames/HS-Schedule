@@ -17,26 +17,24 @@ export const HomePage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-24 md:pb-12">
       <OfflineBanner />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
         {/* Header Greeting */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-900">
           <div>
             <div className="flex items-center space-x-1.5 text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">
               <Building2 className="w-3.5 h-3.5" />
-              <span>{institution?.shortName || 'College'}</span>
+              {/* {institution?.shortName || 'College'} */}
+              <span>{institution?.name || ''}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
               Hello, {personalSchedule ? personalSchedule.rosterRecordName : user?.displayName}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            {/* <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
               {institution?.name || 'Medical College & Hospital'}
-            </p>
+            </p> */}
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
-            <Calendar className="w-3.5 h-3.5 text-blue-400" />
-            <span>Today • {formatDisplayDate(today)}</span>
-          </div>
+
         </div>
 
         {!membership?.defaultScheduleRecordId ? (
@@ -83,12 +81,16 @@ export const HomePage: React.FC = () => {
                     >
                       {/* Color Bar Accent */}
                       <div
-                        className="absolute left-0 top-0 bottom-0 w-2.5"
+                        className="absolute left-0 top-0 bottom-0 w-2.5 h-full"
                         style={{ backgroundColor: posting.departmentColor }}
                       />
 
                       <div className="flex justify-between items-start pl-2">
                         <div>
+                          <div className="flex items-center space-x-2 text-sm font-mono text-slate-400 bg-slate-900 mb-3">
+                            <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                            <span className='font-semibold'>Today • {formatDisplayDate(today)}</span>
+                          </div>
                           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                             {posting.trackName}
                           </span>
@@ -103,12 +105,12 @@ export const HomePage: React.FC = () => {
 
                       <div className="pl-2 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                         {/* Highlighted Date Badge */}
-                        <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-300 font-semibold shadow-xs">
+                        <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-md bg-blue-500/15 border border-blue-500/30 text-blue-300 font-semibold shadow-xs">
                           <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                           <span className="font-mono text-xs">{formatRangeDisplay(posting.startDate, posting.endDate)}</span>
                         </div>
 
-                        <span className="text-xs text-slate-300 font-semibold px-2.5 py-1 bg-slate-800/90 rounded-xl border border-slate-700/80 font-mono">
+                        <span className="text-xs text-slate-300 font-semibold px-2.5 py-1.5 bg-slate-800/90 rounded-xl border border-slate-700/80 font-mono">
                           Batch {posting.matchedBatchCode}
                         </span>
                       </div>
@@ -167,28 +169,27 @@ export const HomePage: React.FC = () => {
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-blue-400 transition-colors">
                         Full Rotation Agenda
                       </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700">
                         {personalSchedule.agenda.length} postings
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
+                    {/* <p className="text-xs text-slate-500 mt-1">
                       {isAgendaOpen
                         ? 'All scheduled postings and department tracks in chronological order.'
                         : 'View complete schedule of upcoming and past clinical rotations.'}
-                    </p>
+                    </p> */}
                   </div>
 
                   <div className="p-2 rounded-xl bg-slate-800/60 group-hover:bg-slate-800 text-slate-400 group-hover:text-white transition-all shrink-0 border border-slate-700/60">
                     <ChevronDown
-                      className={`w-5 h-5 transition-transform duration-200 ${
-                        isAgendaOpen ? 'rotate-180 text-blue-400' : ''
-                      }`}
+                      className={`w-5 h-5 transition-transform duration-200 ${isAgendaOpen ? 'rotate-180 text-blue-400' : ''
+                        }`}
                     />
                   </div>
                 </button>
 
                 {isAgendaOpen && (
-                  <div className="px-5 pb-5 pt-1 border-t border-slate-800/80 space-y-2.5">
+                  <div className="p-5 px-4 border-t border-slate-800/80 space-y-2.5">
                     {personalSchedule.agenda.length === 0 ? (
                       <div className="text-center py-6 text-slate-500 text-xs">
                         No rotation postings found for this schedule.
@@ -203,8 +204,8 @@ export const HomePage: React.FC = () => {
                           <div
                             key={idx}
                             className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${isCurrent
-                                ? 'bg-slate-950 border-blue-500/60 shadow-md ring-1 ring-blue-500/20'
-                                : 'bg-slate-950/60 border-slate-800 hover:border-slate-750'
+                              ? 'bg-slate-950 border-blue-500/60 shadow-md ring-1 ring-blue-500/20'
+                              : 'bg-slate-950/60 border-slate-800 hover:border-slate-750'
                               }`}
                           >
                             <div className="flex items-center space-x-3.5 min-w-0">
