@@ -45,8 +45,11 @@ import {
   Code,
   FileCode,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  ArrowUpDown
 } from 'lucide-react';
+import { formatRelativeTime, formatExactDateTime } from '../utils/timeAgo';
 
 export const InstitutionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -101,7 +104,7 @@ export const InstitutionDetailPage: React.FC = () => {
   const [rosterSearch, setRosterSearch] = useState('');
   const debouncedRosterSearch = useDebounce(rosterSearch, 300);
   const [rosterPage, setRosterPage] = useState(1);
-  const [rosterPageSize, setRosterPageSize] = useState(25);
+  const [rosterPageSize, setRosterPageSize] = useState(10);
   const [rosterTotal, setRosterTotal] = useState(0);
   const [rosterLoading, setRosterLoading] = useState(false);
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
@@ -128,6 +131,11 @@ export const InstitutionDetailPage: React.FC = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [memberSearch, setMemberSearch] = useState('');
   const debouncedMemberSearch = useDebounce(memberSearch, 300);
+  const [memberPage, setMemberPage] = useState(1);
+  const [memberPageSize, setMemberPageSize] = useState(10);
+  const [memberTotal, setMemberTotal] = useState(0);
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberSortSelection, setMemberSortSelection] = useState<string>('name_asc');
 
   // Access Code Rotation
   const [newRotatedCode, setNewRotatedCode] = useState<string | null>(null);
@@ -236,14 +244,27 @@ export const InstitutionDetailPage: React.FC = () => {
     }
   };
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (pageOverride?: number, sizeOverride?: number) => {
     try {
+      setMemberLoading(true);
+      const targetPage = pageOverride ?? memberPage;
+      const targetSize = sizeOverride ?? memberPageSize;
+      const [field, order] = memberSortSelection.split('_');
       const { data } = await apiClient.get(`/institutions/${id}/members`, {
-        params: { search: debouncedMemberSearch }
+        params: {
+          search: debouncedMemberSearch,
+          page: targetPage,
+          pageSize: targetSize,
+          sortBy: field,
+          sortOrder: order
+        }
       });
       setMembers(data.data.items || []);
+      setMemberTotal(data.data.total ?? 0);
     } catch (err: any) {
       console.error(err);
+    } finally {
+      setMemberLoading(false);
     }
   };
 
@@ -279,8 +300,14 @@ export const InstitutionDetailPage: React.FC = () => {
   }, [id, debouncedRosterSearch, rosterPage, rosterPageSize]);
 
   useEffect(() => {
-    fetchMembers();
+    setMemberPage(1);
   }, [debouncedMemberSearch]);
+
+  useEffect(() => {
+    if (id) {
+      fetchMembers();
+    }
+  }, [id, debouncedMemberSearch, memberPage, memberPageSize, memberSortSelection]);
 
   // Copy helper
   const copyToClipboard = (text: string) => {
@@ -1114,6 +1141,7 @@ export const InstitutionDetailPage: React.FC = () => {
                       }}
                       className="border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
+                      <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
@@ -1165,100 +1193,216 @@ export const InstitutionDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Search Member Accounts by Name or Email */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-3">
-            <Search className="w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={memberSearch}
-              onChange={(e) => setMemberSearch(e.target.value)}
-              placeholder="Search house surgeon accounts by name or email..."
-              className="w-full text-sm outline-none bg-transparent"
-            />
-            {memberSearch && (
-              <button onClick={() => setMemberSearch('')} className="text-xs text-slate-400 hover:text-slate-600">
-                Clear
-              </button>
-            )}
+          {/* Search and Sort Member Accounts */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-3">
+              <Search className="w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                placeholder="Search house surgeon accounts by name or email..."
+                className="w-full text-sm outline-none bg-transparent"
+              />
+              {memberSearch && (
+                <button onClick={() => setMemberSearch('')} className="text-xs text-slate-400 hover:text-slate-600 px-2">
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-2.5">
+              <ArrowUpDown className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Sort:</span>
+              <select
+                value={memberSortSelection}
+                onChange={(e) => {
+                  setMemberSortSelection(e.target.value);
+                  setMemberPage(1);
+                }}
+                className="text-xs font-medium text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-2"
+              >
+                <option value="name_asc">Account Name (A-Z)</option>
+                <option value="name_desc">Account Name (Z-A)</option>
+                <option value="createdAt_desc">Date Joined (Newest first)</option>
+                <option value="createdAt_asc">Date Joined (Oldest first)</option>
+              </select>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 tracking-wider">
-                  <th className="px-6 py-3.5">Account Name</th>
-                  <th className="px-6 py-3.5">Email</th>
-                  <th className="px-6 py-3.5">Default Schedule Profile</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {members.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                      No accounts found matching search criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  members.map((m) => (
-                    <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-3.5 font-semibold text-slate-900">{m.userId?.displayName || 'Unknown'}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{m.userId?.email}</td>
-                      <td className="px-6 py-3.5">
-                        {m.defaultScheduleRecordId?.name ? (
-                          <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 text-xs">
-                            {m.defaultScheduleRecordId.name}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-xs italic">Profile not selected</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
-                          m.userId?.status === 'blocked'
-                            ? 'bg-red-100 text-red-800 border border-red-200'
-                            : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {m.userId?.status === 'blocked' ? 'Blocked' : m.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-right space-x-2">
-                        <button
-                          onClick={() => handleToggleBlockMember(m)}
-                          className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${
-                            m.userId?.status === 'blocked'
-                              ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-300'
-                              : 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-300'
-                          }`}
-                          title={m.userId?.status === 'blocked' ? 'Unblock user account' : 'Block user account from signing in'}
-                        >
-                          {m.userId?.status === 'blocked' ? (
-                            <>
-                              <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                              Unblock
-                            </>
-                          ) : (
-                            <>
-                              <UserX className="w-3.5 h-3.5 mr-1" />
-                              Block
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleOpenRemoveMember(m)}
-                          className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-colors"
-                          title="Remove this account from the medical college"
-                        >
-                          <UserMinus className="w-3.5 h-3.5 mr-1" />
-                          Remove
-                        </button>
-                      </td>
+            {memberLoading ? (
+              <div className="p-12 text-center text-slate-500">Loading accounts...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                      <th className="px-6 py-3.5">Account Name</th>
+                      <th className="px-6 py-3.5">Email</th>
+                      <th className="px-6 py-3.5">Default Schedule Profile</th>
+                      <th className="px-6 py-3.5">Joined On</th>
+                      <th className="px-6 py-3.5">Last Active</th>
+                      <th className="px-6 py-3.5">Status</th>
+                      <th className="px-6 py-3.5 text-right">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {members.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                          No accounts found matching search criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      members.map((m) => (
+                        <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="px-6 py-3.5 font-semibold text-slate-900">{m.userId?.displayName || 'Unknown'}</td>
+                          <td className="px-6 py-3.5 text-slate-600">{m.userId?.email}</td>
+                          <td className="px-6 py-3.5">
+                            {m.defaultScheduleRecordId?.name ? (
+                              <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 text-xs">
+                                {m.defaultScheduleRecordId.name}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-xs italic">Profile not selected</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3.5 text-slate-600 text-xs">
+                            <span className="flex items-center space-x-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              <span>
+                                {m.createdAt
+                                  ? new Date(m.createdAt).toLocaleDateString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric'
+                                    })
+                                  : 'N/A'}
+                              </span>
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <div
+                              className="inline-flex items-center space-x-1.5 text-xs text-slate-600 cursor-help"
+                              title={formatExactDateTime(m.userId?.lastActiveAt)}
+                            >
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
+                              <span className={m.userId?.lastActiveAt ? 'font-medium text-slate-700' : 'text-slate-400 italic'}>
+                                {formatRelativeTime(m.userId?.lastActiveAt)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${
+                              m.userId?.status === 'blocked'
+                                ? 'bg-red-100 text-red-800 border border-red-200'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {m.userId?.status === 'blocked' ? 'Blocked' : m.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5 text-right space-x-2">
+                            <button
+                              onClick={() => handleToggleBlockMember(m)}
+                              className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors ${
+                                m.userId?.status === 'blocked'
+                                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-300'
+                                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-300'
+                              }`}
+                              title={m.userId?.status === 'blocked' ? 'Unblock user account' : 'Block user account from signing in'}
+                            >
+                              {m.userId?.status === 'blocked' ? (
+                                <>
+                                  <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                                  Unblock
+                                </>
+                              ) : (
+                                <>
+                                  <UserX className="w-3.5 h-3.5 mr-1" />
+                                  Block
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleOpenRemoveMember(m)}
+                              className="inline-flex items-center px-2.5 py-1 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-lg transition-colors"
+                              title="Remove this account from the medical college"
+                            >
+                              <UserMinus className="w-3.5 h-3.5 mr-1" />
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {memberTotal > 0 && (
+              <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+                <div className="flex items-center gap-3">
+                  <span>
+                    Showing{' '}
+                    <span className="font-semibold text-slate-800">
+                      {(memberPage - 1) * memberPageSize + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-semibold text-slate-800">
+                      {Math.min(memberPage * memberPageSize, memberTotal)}
+                    </span>{' '}
+                    of{' '}
+                    <span className="font-semibold text-slate-800">{memberTotal}</span> accounts
+                  </span>
+                  <span className="text-slate-300">|</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Per page:</span>
+                    <select
+                      value={memberPageSize}
+                      onChange={(e) => {
+                        setMemberPageSize(Number(e.target.value));
+                        setMemberPage(1);
+                      }}
+                      className="border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setMemberPage((p) => Math.max(1, p - 1))}
+                    disabled={memberPage <= 1 || memberLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    Previous
+                  </button>
+                  <span className="px-2 py-1 font-medium text-slate-700">
+                    Page {memberPage} of {Math.max(1, Math.ceil(memberTotal / memberPageSize))}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setMemberPage((p) =>
+                        p < Math.ceil(memberTotal / memberPageSize) ? p + 1 : p
+                      )
+                    }
+                    disabled={memberPage >= Math.ceil(memberTotal / memberPageSize) || memberLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    Next
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

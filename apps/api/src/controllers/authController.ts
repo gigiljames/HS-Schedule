@@ -183,9 +183,11 @@ export class AuthController {
   async listHsUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 50;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string, 10) : 10;
       const search = req.query.search as string | undefined;
-      const result = await authService.listHsUsers({ page, pageSize, search });
+      const sortBy = (req.query.sortBy as any) || 'name';
+      const sortOrder = (req.query.sortOrder as any) || 'asc';
+      const result = await authService.listHsUsers({ page, pageSize, search, sortBy, sortOrder });
       res.json({
         success: true,
         data: result

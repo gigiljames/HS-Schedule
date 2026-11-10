@@ -10,6 +10,7 @@ export interface IUser {
   username?: string;
   googleSubjectId?: string;
   status: UserStatus;
+  lastActiveAt?: string;
   createdAt: string;
   updatedAt: string;
 }

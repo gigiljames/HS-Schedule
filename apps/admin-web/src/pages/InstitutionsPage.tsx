@@ -1,17 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import { Link } from 'react-router-dom';
-import { IInstitution } from '@hs/shared';
+import { IInstitution } from '../shared';
 import { useDebounce } from '../hooks/useDebounce';
 import { toast } from 'react-hot-toast';
-import { Building2, Plus, Search, Key, ChevronRight, Copy, Check, X, Eye, EyeOff } from 'lucide-react';
+import {
+  Building2,
+  Plus,
+  Search,
+  Key,
+  ChevronRight,
+  Copy,
+  Check,
+  X,
+  Eye,
+  EyeOff,
+  ArrowUpDown,
+  ChevronLeft
+} from 'lucide-react';
 
 export const InstitutionsPage: React.FC = () => {
   const [institutions, setInstitutions] = useState<IInstitution[]>([]);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [sortSelection, setSortSelection] = useState<string>('name_asc');
   const [loading, setLoading] = useState(true);
 
   // Hidden/visible state for access codes: Map of institution id -> boolean
@@ -29,8 +44,15 @@ export const InstitutionsPage: React.FC = () => {
   const fetchInstitutions = async () => {
     setLoading(true);
     try {
+      const [field, order] = sortSelection.split('_');
       const { data } = await apiClient.get('/institutions', {
-        params: { search: debouncedSearch, page, pageSize: 15 }
+        params: {
+          search: debouncedSearch,
+          page,
+          pageSize,
+          sortBy: field,
+          sortOrder: order
+        }
       });
       setInstitutions(data.data.items || []);
       setTotal(data.data.total || 0);
@@ -42,8 +64,12 @@ export const InstitutionsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
     fetchInstitutions();
-  }, [page, debouncedSearch]);
+  }, [page, pageSize, debouncedSearch, sortSelection]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +112,8 @@ export const InstitutionsPage: React.FC = () => {
     setCreatedAccessCode(null);
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -107,27 +135,44 @@ export const InstitutionsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Search Input with Debounce */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-3">
-        <Search className="w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          placeholder="Search institutions by name or location..."
-          className="w-full bg-transparent border-none focus:outline-none text-sm text-slate-800 placeholder-slate-400"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1"
+      {/* Search and Sort Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-3">
+          <Search className="w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search institutions by name or location..."
+            className="w-full bg-transparent border-none focus:outline-none text-sm text-slate-800 placeholder-slate-400"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center space-x-2.5">
+          <ArrowUpDown className="w-4 h-4 text-slate-400 shrink-0" />
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Sort:</span>
+          <select
+            value={sortSelection}
+            onChange={(e) => {
+              setSortSelection(e.target.value);
+              setPage(1);
+            }}
+            className="text-xs font-medium text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-2"
           >
-            Clear
-          </button>
-        )}
+            <option value="name_asc">Institution Name (A-Z)</option>
+            <option value="name_desc">Institution Name (Z-A)</option>
+            <option value="createdAt_desc">Date Created (Newest first)</option>
+            <option value="createdAt_asc">Date Created (Oldest first)</option>
+          </select>
+        </div>
       </div>
 
       {/* Institutions Table */}
@@ -196,6 +241,65 @@ export const InstitutionsPage: React.FC = () => {
             </table>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        {total > 0 && (
+          <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
+            <div className="flex items-center gap-3">
+              <span>
+                Showing{' '}
+                <span className="font-semibold text-slate-800">
+                  {(page - 1) * pageSize + 1}
+                </span>{' '}
+                to{' '}
+                <span className="font-semibold text-slate-800">
+                  {Math.min(page * pageSize, total)}
+                </span>{' '}
+                of{' '}
+                <span className="font-semibold text-slate-800">{total}</span> institutions
+              </span>
+              <span className="text-slate-300">|</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || loading}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Previous
+              </button>
+              <span className="px-2 py-1 font-medium text-slate-700">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
+                disabled={page >= totalPages || loading}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                Next
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create Modal */}
@@ -244,7 +348,6 @@ export const InstitutionsPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleCreate} className="mt-4 space-y-4">
-
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Full Institution Name</label>
                   <input
