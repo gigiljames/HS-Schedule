@@ -290,7 +290,7 @@ export const ProfilePage: React.FC = () => {
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center space-x-2.5">
                   <Bell className="w-5 h-5 text-slate-400" />
-                  <h2 className="text-lg font-bold text-white">Posting Reminders (Web Push)</h2>
+                  <h2 className="text-lg font-bold text-white">Posting Reminders</h2>
                 </div>
 
                 {pushSupported && (
