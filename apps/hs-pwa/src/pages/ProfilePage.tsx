@@ -176,11 +176,11 @@ export const ProfilePage: React.FC = () => {
       <OfflineBanner />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        <div>
+        <div className='pl-1'>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Doctor Profile & Settings</h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+          {/* <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
             Manage your account details, default schedule link, and rotation reminder preferences.
-          </p>
+          </p> */}
         </div>
 
         {/* 2-Column Responsive Layout */}
@@ -188,7 +188,7 @@ export const ProfilePage: React.FC = () => {
           {/* Left Column: Account Details, College & Schedule Link */}
           <div className="lg:col-span-6 space-y-6">
             {/* Account Card */}
-            <section className="bg-slate-900 rounded-3xl border border-slate-800 p-6 shadow-xl space-y-4">
+            <section className="bg-slate-900 rounded-3xl border border-slate-800 p-5 shadow-xl space-y-4">
               <div className="flex items-center space-x-4 pb-4 border-b border-slate-800">
                 <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-xl shrink-0">
                   {user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : 'DR'}
@@ -236,20 +236,20 @@ export const ProfilePage: React.FC = () => {
                       </button>
                     </div>
                   )}
-                  <p className="text-xs text-slate-400 truncate mt-0.5">{user?.email}</p>
+                  <p className="text-sm text-slate-400 truncate mt-0.5">{user?.email}</p>
                 </div>
               </div>
 
 
               {/* College Membership */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                   Medical College Membership
                 </span>
                 <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
                   <div className="flex items-center space-x-2.5">
                     <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span className="text-xs sm:text-sm font-semibold text-white">{institution?.name || 'Not Joined'}</span>
+                    <span className="text-sm font-semibold text-white">{institution?.name || 'Not Joined'}</span>
                   </div>
                   <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg bg-blue-950 text-blue-300 border border-blue-800/60">
                     {institution?.shortName}
@@ -259,21 +259,21 @@ export const ProfilePage: React.FC = () => {
 
               {/* Selected Default Schedule Profile */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                   Default Schedule Profile
                 </span>
                 <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
                   <div>
-                    <span className="text-xs sm:text-sm font-bold text-white block">
+                    <span className="text-sm sm:text-sm font-bold text-white block">
                       {personalSchedule?.rosterRecordName || 'None Selected'}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       Controls personal agenda & reminders
                     </span>
                   </div>
                   <button
                     onClick={handleChangeProfile}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
                   >
                     Change
                   </button>
@@ -281,6 +281,132 @@ export const ProfilePage: React.FC = () => {
               </div>
             </section>
 
+
+          </div>
+
+          {/* Right Column: Web Push Notification Preferences */}
+          <div className="lg:col-span-6 space-y-6">
+            <section className="bg-slate-900 rounded-3xl border border-slate-800 p-5 shadow-xl space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center space-x-2.5">
+                  <Bell className="w-5 h-5 text-slate-400" />
+                  <h2 className="text-lg font-bold text-white">Posting Reminders (Web Push)</h2>
+                </div>
+
+                {pushSupported && (
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${pushPermission === 'granted'
+                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                      : pushPermission === 'denied'
+                        ? 'bg-red-950 text-red-300 border border-red-800'
+                        : 'bg-amber-950 text-amber-300 border border-amber-800'
+                      }`}
+                  >
+                    {pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked' : 'Not Enabled'}
+                  </span>
+                )}
+              </div>
+
+
+              {pushPermission !== 'granted' && (
+                <div className="p-4 bg-blue-950/30 rounded-2xl border border-blue-900/60 text-xs space-y-3">
+                  <p className="text-blue-200">
+                    Receive automated reminders on the evening before a rotation ends and on the morning a new rotation begins.
+                  </p>
+                  <button
+                    onClick={handleRequestPushPermission}
+                    disabled={isSubscribing}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
+                  >
+                    {isSubscribing ? 'Requesting Permission...' : 'Enable Web Push Reminders'}
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-3 pt-1 border-b border-slate-800 pb-4">
+                {/* Toggle 1: Posting End Reminder */}
+                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
+                  <div>
+                    <span className="text-sm font-bold text-white block">Posting-End Reminder</span>
+                    <span className="text-xs text-slate-400">Day before posting ends at {timeEnd} IST</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={endReminder}
+                    onChange={(e) => setEndReminder(e.target.checked)}
+                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
+                  />
+                </div>
+
+                {/* Toggle 2: Posting Start Notification */}
+                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
+                  <div>
+                    <span className="text-sm font-bold text-white block">Posting-Start Notification</span>
+                    <span className="text-xs text-slate-400">First day of new posting at {timeStart} IST</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={startReminder}
+                    onChange={(e) => setStartReminder(e.target.checked)}
+                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
+                  />
+                </div>
+
+                {/* Privacy Toggle: Hide department on lock screen */}
+                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
+                  <div>
+                    <span className="text-sm font-bold text-white block">Lock-Screen Privacy</span>
+                    <span className="text-xs text-slate-400">Hide clinical department name on device lock screen</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={hideDept}
+                    onChange={(e) => setHideDept(e.target.checked)}
+                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
+                  />
+                </div>
+
+
+                <div className='mx-1'>
+                  <button
+                    onClick={handleSavePreferences}
+                    disabled={savingPrefs}
+                    className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold border border-slate-700 transition-colors disabled:opacity-50"
+                  >
+                    {savingPrefs ? 'Saving Settings...' : 'Save Notification Preferences'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-950 rounded-2xl text-[11px] text-slate-700 space-y-1 border border-slate-800">
+                <div className="flex items-center space-x-1.5 font-semibold text-slate-500">
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Offline Schedule Cache</span>
+                </div>
+                <p>
+                  Schedules are locally cached on this device for offline reference in hospital zones with weak cell reception.
+                  {lastSyncedAt && (() => {
+                    try {
+                      const dt = new Date(lastSyncedAt);
+                      const d = String(dt.getDate()).padStart(2, '0');
+                      const m = String(dt.getMonth() + 1).padStart(2, '0');
+                      const y = dt.getFullYear();
+                      const timeStr = new Intl.DateTimeFormat('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }).format(dt);
+                      return ` Last synced: ${d}-${m}-${y}, ${timeStr}`;
+                    } catch {
+                      return ` Last synced: ${lastSyncedAt}`;
+                    }
+                  })()}
+                </p>
+              </div>
+            </section>
+          </div>
+          <div>
             {/* Institution & Account Actions */}
             <section className="bg-slate-900 rounded-3xl border border-slate-800 p-5 shadow-xl space-y-3">
               {leaveConfirm ? (
@@ -309,141 +435,20 @@ export const ProfilePage: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setLeaveConfirm(true)}
-                  className="w-full py-3 bg-slate-950 hover:bg-red-950/30 text-red-400 border border-slate-800 hover:border-red-900/50 rounded-2xl text-xs font-semibold transition-colors flex items-center justify-center space-x-2"
+                  className="w-full py-4 bg-slate-950 hover:bg-red-950/30 text-red-400 border border-slate-800 hover:border-red-900/50 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Leave {institution?.name || 'College'}</span>
+                  <ShieldAlert className="w-5 h-5" />
+                  <span className='max-w-3/4'>Leave {institution?.name || 'College'}</span>
                 </button>
               )}
 
               <button
                 onClick={() => logout()}
-                className="w-full py-3 bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-2xl text-xs font-semibold transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-4 bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center space-x-2"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5" />
                 <span>Sign Out</span>
               </button>
-            </section>
-          </div>
-
-          {/* Right Column: Web Push Notification Preferences */}
-          <div className="lg:col-span-6 space-y-6">
-            <section className="bg-slate-900 rounded-3xl border border-slate-800 p-6 shadow-xl space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center space-x-2.5">
-                  <Bell className="w-5 h-5 text-amber-400" />
-                  <h2 className="text-base font-bold text-white">Posting Reminders (Web Push)</h2>
-                </div>
-
-                {pushSupported && (
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${pushPermission === 'granted'
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                        : pushPermission === 'denied'
-                          ? 'bg-red-950 text-red-300 border border-red-800'
-                          : 'bg-amber-950 text-amber-300 border border-amber-800'
-                      }`}
-                  >
-                    {pushPermission === 'granted' ? 'Enabled' : pushPermission === 'denied' ? 'Blocked' : 'Not Enabled'}
-                  </span>
-                )}
-              </div>
-
-
-              {pushPermission !== 'granted' && (
-                <div className="p-4 bg-blue-950/30 rounded-2xl border border-blue-900/60 text-xs space-y-3">
-                  <p className="text-blue-200">
-                    Receive automated reminders on the evening before a rotation ends and on the morning a new rotation begins.
-                  </p>
-                  <button
-                    onClick={handleRequestPushPermission}
-                    disabled={isSubscribing}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors disabled:opacity-50"
-                  >
-                    {isSubscribing ? 'Requesting Permission...' : 'Enable Web Push Reminders'}
-                  </button>
-                </div>
-              )}
-
-              <div className="space-y-3 pt-1">
-                {/* Toggle 1: Posting End Reminder */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
-                  <div>
-                    <span className="text-xs font-bold text-white block">Posting-End Reminder</span>
-                    <span className="text-[11px] text-slate-400">Day before posting ends at {timeEnd} IST</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={endReminder}
-                    onChange={(e) => setEndReminder(e.target.checked)}
-                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
-                  />
-                </div>
-
-                {/* Toggle 2: Posting Start Notification */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
-                  <div>
-                    <span className="text-xs font-bold text-white block">Posting-Start Notification</span>
-                    <span className="text-[11px] text-slate-400">First day of new posting at {timeStart} IST</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={startReminder}
-                    onChange={(e) => setStartReminder(e.target.checked)}
-                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
-                  />
-                </div>
-
-                {/* Privacy Toggle: Hide department on lock screen */}
-                <div className="flex items-center justify-between p-3.5 bg-slate-950 rounded-2xl border border-slate-800">
-                  <div>
-                    <span className="text-xs font-bold text-white block">Lock-Screen Privacy</span>
-                    <span className="text-[11px] text-slate-400">Hide clinical department name on device lock screen</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={hideDept}
-                    onChange={(e) => setHideDept(e.target.checked)}
-                    className="w-5 h-5 rounded text-blue-600 bg-slate-800 border-slate-700"
-                  />
-                </div>
-
-
-                <button
-                  onClick={handleSavePreferences}
-                  disabled={savingPrefs}
-                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors disabled:opacity-50"
-                >
-                  {savingPrefs ? 'Saving Settings...' : 'Save Notification Preferences'}
-                </button>
-              </div>
-
-              <div className="p-4 bg-slate-950 rounded-2xl text-[11px] text-slate-500 space-y-1 border border-slate-800">
-                <div className="flex items-center space-x-1.5 font-semibold text-slate-400">
-                  <Info className="w-3.5 h-3.5" />
-                  <span>Offline Schedule Cache</span>
-                </div>
-                <p>
-                  Schedules are locally cached on this device for offline reference in hospital zones with weak cell reception.
-                  {lastSyncedAt && (() => {
-                    try {
-                      const dt = new Date(lastSyncedAt);
-                      const d = String(dt.getDate()).padStart(2, '0');
-                      const m = String(dt.getMonth() + 1).padStart(2, '0');
-                      const y = dt.getFullYear();
-                      const timeStr = new Intl.DateTimeFormat('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                      }).format(dt);
-                      return ` Last synced: ${d}-${m}-${y}, ${timeStr}`;
-                    } catch {
-                      return ` Last synced: ${lastSyncedAt}`;
-                    }
-                  })()}
-                </p>
-              </div>
             </section>
           </div>
         </div>
